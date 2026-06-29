@@ -31,6 +31,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Start TestFlow + Pact Broker
         run: docker compose up -d postgres pact-broker testflow
 

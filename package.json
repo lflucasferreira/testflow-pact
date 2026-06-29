@@ -1,0 +1,30 @@
+{
+  "name": "testflow-pact",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contract testing com Pact.js contra o TestFlow (qaschool/testflow)",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:consumer": "vitest run src/consumers",
+    "pact:publish": "node --env-file=.env --import tsx scripts/publish-pacts.ts",
+    "pact:verify": "node --env-file=.env --import tsx src/provider/verify.ts",
+    "pact:can-i-deploy": "node --env-file=.env --import tsx scripts/can-i-deploy.ts",
+    "test:consumer:publish": "npm run test:consumer && npm run pact:publish",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:test": "docker compose --profile test run --rm test-runner"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@pact-foundation/pact": "^17.0.0",
+    "@pact-foundation/pact-cli": "^18.1.0",
+    "@types/node": "^22.15.29",
+    "tsx": "^4.22.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

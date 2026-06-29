@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pact-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pact}
+      POSTGRES_DB: ${POSTGRES_DB:-pact}
+    volumes:
+      - pact-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pact}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pact-broker:
+    image: pactfoundation/pact-broker:latest
+    container_name: pact-broker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PACT_BROKER_PORT:-9292}:9292"
+    environment:
+      PACT_BROKER_PORT: "9292"
+      PACT_BROKER_DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-pact}@postgres:5432/${POSTGRES_DB:-pact}
+      PACT_BROKER_BASIC_AUTH_USERNAME: ${PACT_BROKER_USERNAME:-pact}
+      PACT_BROKER_BASIC_AUTH_PASSWORD: ${PACT_BROKER_PASSWORD:-pact}
+      PACT_BROKER_ALLOW_PUBLIC_READ: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9292/diagnostic/status/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  testflow:
+    image: qaschool/testflow:latest
+    container_name: testflow
+    ports:
+      - "${TESTFLOW_PORT:-5050}:5050"
+    restart: unless-stopped
+
+  test-runner:
+    profiles: ["test"]
+    image: node:20-bookworm-slim
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pact-broker:
+        condition: service_started
+      testflow:
+        condition: service_started
+    volumes:
+      - .:/app
+      - test_node_modules:/app/node_modules
+    environment:
+      PROVIDER_BASE_URL: http://testflow:5050
+      PACT_BROKER_BASE_URL: http://pact-broker:9292
+      PACT_BROKER_USERNAME: ${PACT_BROKER_USERNAME:-pact}
+      PACT_BROKER_PASSWORD: ${PACT_BROKER_PASSWORD:-pact}
+      PACT_CONSUMER_NAME: ${PACT_CONSUMER_NAME:-testflow-web}
+      PACT_PROVIDER_NAME: ${PACT_PROVIDER_NAME:-sandbox-api}
+      PACT_CONSUMER_VERSION: ${PACT_CONSUMER_VERSION:-0.1.2}
+      PACT_PROVIDER_VERSION: ${PACT_PROVIDER_VERSION:-0.1.1}
+      PACT_CONSUMER_TAG: ${PACT_CONSUMER_TAG:-main}
+    command: >
+      sh -c "npm ci &&
+      npm run test:consumer &&
+      npm run pact:publish &&
+      npm run pact:verify"
+
+volumes:
+  pact-postgres-data:
+  test_node_modules:

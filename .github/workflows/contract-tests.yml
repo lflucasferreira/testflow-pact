@@ -1,0 +1,78 @@
+name: Contract Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: pact-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract-tests:
+    name: Pact — consumer, verify, can-i-deploy
+    runs-on: ubuntu-latest
+    env:
+      PACT_CONSUMER_VERSION: ${{ github.sha }}
+      PACT_PROVIDER_VERSION: ${{ github.sha }}
+      PACT_CONSUMER_TAG: main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare .env
+        run: cp .env.example .env
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Start TestFlow + Pact Broker
+        run: docker compose up -d postgres pact-broker testflow
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for TestFlow (localhost:5050)..."
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5050/health && break
+            sleep 2
+          done
+          curl -sf http://localhost:5050/health
+
+          echo "Waiting for Pact Broker (localhost:9292)..."
+          for i in $(seq 1 60); do
+            curl -sf -u pact:pact http://localhost:9292/diagnostic/status/heartbeat && break
+            sleep 2
+          done
+          curl -sf -u pact:pact http://localhost:9292/diagnostic/status/heartbeat
+
+      - name: Consumer tests
+        run: npm run test:consumer
+
+      - name: Publish pacts
+        run: npm run pact:publish
+
+      - name: Provider verification
+        run: npm run pact:verify
+
+      - name: can-i-deploy (gate)
+        run: npm run pact:can-i-deploy
+
+      - name: Docker logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+
+  deploy:
+    name: Deploy
+    needs: contract-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy gate passed
+        run: |
+          echo "Contract tests passed for commit ${{ github.sha }}."
+          echo "Substitua este step pelo deploy real (ex.: kubectl, SSH, cloud CLI)."

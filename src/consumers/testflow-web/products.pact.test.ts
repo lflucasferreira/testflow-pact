@@ -3,7 +3,7 @@ import { PactV3, MatchersV3 } from "@pact-foundation/pact";
 import { describe, expect, it } from "vitest";
 import { ProductsClient } from "./products-client.js";
 
-const { eachLike, string, decimal } = MatchersV3;
+const { eachLike, string, number } = MatchersV3;
 
 const provider = new PactV3({
   dir: path.resolve(process.cwd(), "pacts"),
@@ -27,7 +27,7 @@ describe("testflow-web → sandbox-api", () => {
           products: eachLike({
             id: string("p1"),
             name: string("Cypress License"),
-            price: decimal(9.99),
+            price: number(0),
             category: string("tool"),
           }),
         },

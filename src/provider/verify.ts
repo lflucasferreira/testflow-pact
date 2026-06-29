@@ -22,8 +22,14 @@ const verifier = new Verifier({
   stateHandlers: {
     "the API is healthy": async () => undefined,
     "users exist": async () => undefined,
+    "admin users exist": async () => undefined,
+    "user 1 exists": async () => undefined,
     "products exist": async () => undefined,
+    "product p1 exists": async () => undefined,
     "valid demo credentials exist": async () => undefined,
+    "the user is authenticated": async () => undefined,
+    "invalid credentials are provided": async () => undefined,
+    "API metadata exists": async () => undefined,
   },
 });
 

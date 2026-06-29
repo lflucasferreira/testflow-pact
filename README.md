@@ -26,9 +26,15 @@ Repositório de automação **separado** do app — o ambiente sobe com `docker 
 | Método | Path | Consumer |
 |--------|------|----------|
 | GET | `/health` | `mobile-app` |
+| GET | `/api/meta` | `testflow-web` |
 | GET | `/api/users` | `testflow-web` |
+| GET | `/api/users?role=admin` | `testflow-web` |
+| GET | `/api/users/:id` | `testflow-web` |
 | GET | `/api/products` | `testflow-web` |
 | POST | `/api/auth/login` | `testflow-web` |
+| POST | `/api/auth/login` (401) | `testflow-web` |
+| GET | `/api/auth/me` | `testflow-web` |
+| POST | `/api/orders` | `testflow-web` |
 
 ## Estrutura
 

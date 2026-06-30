@@ -1,20 +1,14 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing env var: ${name}`);
-  }
-  return value;
-}
+import { envOrDefault, requiredEnv } from "../src/lib/env.js";
+import { PACTS_DIR } from "../src/pact/constants.js";
 
 async function publishPacts(): Promise<void> {
   const brokerBaseUrl = requiredEnv("PACT_BROKER_BASE_URL").replace(/\/$/, "");
   const username = requiredEnv("PACT_BROKER_USERNAME");
   const password = requiredEnv("PACT_BROKER_PASSWORD");
-  const consumerVersion = process.env.PACT_CONSUMER_VERSION ?? "0.1.0";
-  const tag = process.env.PACT_CONSUMER_TAG ?? "main";
+  const consumerVersion = envOrDefault("PACT_CONSUMER_VERSION", "0.1.0");
+  const tag = envOrDefault("PACT_CONSUMER_TAG", "main");
 
   const auth = Buffer.from(`${username}:${password}`).toString("base64");
   const headers = {
@@ -22,15 +16,14 @@ async function publishPacts(): Promise<void> {
     Authorization: `Basic ${auth}`,
   };
 
-  const pactsDir = path.resolve("pacts");
-  const files = (await readdir(pactsDir)).filter((file) => file.endsWith(".json"));
+  const files = (await readdir(PACTS_DIR)).filter((file) => file.endsWith(".json"));
 
   if (files.length === 0) {
-    throw new Error(`No pact files found in ${pactsDir}. Run npm run test:consumer first.`);
+    throw new Error(`No pact files found in ${PACTS_DIR}. Run npm run test:consumer first.`);
   }
 
   for (const file of files) {
-    const filePath = path.join(pactsDir, file);
+    const filePath = path.join(PACTS_DIR, file);
     const content = await readFile(filePath, "utf-8");
     const pact = JSON.parse(content) as {
       consumer: { name: string };

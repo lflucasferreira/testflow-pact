@@ -7,7 +7,7 @@ Repositório de automação **separado** do app — o ambiente sobe com `docker 
 ## Pré-requisitos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) em execução
-- [Node.js](https://nodejs.org/) **20+** (recomendado **22+** para `@pact-foundation/pact` v17)
+- [Node.js](https://nodejs.org/) **22+** (`@pact-foundation/pact` v17)
 - `npm`
 
 ## Nomes no Pact
@@ -42,10 +42,21 @@ Repositório de automação **separado** do app — o ambiente sobe com `docker 
 testflow-pact/
 ├── docker-compose.yml
 ├── src/
+│   ├── pact/                 # constants, createPact, matchers
+│   ├── lib/env.ts
+│   ├── types/sandbox-api.ts
+│   ├── fixtures/credentials.ts
 │   ├── consumers/
-│   │   ├── mobile-app/       # health
-│   │   └── testflow-web/     # users + login
-│   └── provider/verify.ts
+│   │   ├── mobile-app/health/
+│   │   └── testflow-web/
+│   │       ├── auth/
+│   │       ├── users/
+│   │       ├── catalog/
+│   │       └── meta/
+│   └── provider/
+│       ├── verify.ts
+│       ├── verifier-config.ts
+│       └── state-handlers/
 ├── scripts/
 │   ├── publish-pacts.ts
 │   └── can-i-deploy.ts

@@ -1,17 +1,15 @@
-import path from "node:path";
-import { PactV3, MatchersV3 } from "@pact-foundation/pact";
+import { MatchersV3 } from "@pact-foundation/pact";
 import { describe, expect, it } from "vitest";
+import { CONSUMER_MOBILE_APP } from "../../../pact/constants.js";
+import { createPact } from "../../../pact/create-pact.js";
+import { JSON_CONTENT_TYPE } from "../../../pact/matchers.js";
 import { HealthClient } from "./health-client.js";
 
 const { regex } = MatchersV3;
 
-const provider = new PactV3({
-  dir: path.resolve(process.cwd(), "pacts"),
-  consumer: "mobile-app",
-  provider: "sandbox-api",
-});
+const provider = createPact(CONSUMER_MOBILE_APP);
 
-describe("mobile-app → sandbox-api", () => {
+describe("mobile-app → sandbox-api / health", () => {
   it("GET /health returns status ok", async () => {
     provider
       .given("the API is healthy")
@@ -22,7 +20,7 @@ describe("mobile-app → sandbox-api", () => {
       })
       .willRespondWith({
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: JSON_CONTENT_TYPE,
         body: {
           status: "ok",
           timestamp: regex(

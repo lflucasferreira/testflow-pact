@@ -1,13 +1,4 @@
-export type Product = {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-};
-
-export type ProductsResponse = {
-  products: Product[];
-};
+import type { ProductsResponse } from "../../../types/sandbox-api.js";
 
 export class ProductsClient {
   constructor(private readonly baseUrl: string) {}

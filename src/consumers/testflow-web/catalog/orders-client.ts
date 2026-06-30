@@ -1,19 +1,4 @@
-export type CreateOrderRequest = {
-  productId: string;
-  quantity?: number;
-};
-
-export type Order = {
-  id: string;
-  productId: string;
-  quantity: number;
-  total: number;
-  status: string;
-};
-
-export type CreateOrderResponse = {
-  order: Order;
-};
+import type { CreateOrderRequest, CreateOrderResponse } from "../../../types/sandbox-api.js";
 
 export class OrdersClient {
   constructor(private readonly baseUrl: string) {}

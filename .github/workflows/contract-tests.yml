@@ -10,14 +10,42 @@ concurrency:
   group: pact-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PACT_CONSUMER_VERSION: ${{ github.sha }}
+  PACT_PROVIDER_VERSION: ${{ github.sha }}
+  PACT_CONSUMER_TAG: main
+
 jobs:
-  contract-tests:
-    name: Pact — consumer, verify, can-i-deploy
+  consumer-tests:
+    name: Pact — consumer tests
     runs-on: ubuntu-latest
-    env:
-      PACT_CONSUMER_VERSION: ${{ github.sha }}
-      PACT_PROVIDER_VERSION: ${{ github.sha }}
-      PACT_CONSUMER_TAG: main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Consumer tests
+        run: npm run test:consumer
+
+      - name: Upload pact files
+        uses: actions/upload-artifact@v4
+        with:
+          name: pact-files
+          path: pacts/*.json
+          if-no-files-found: error
+
+  provider-verification:
+    name: Pact — publish & verify
+    runs-on: ubuntu-latest
+    needs: consumer-tests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +61,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Download pact files
+        uses: actions/download-artifact@v4
+        with:
+          name: pact-files
+          path: pacts
 
       - name: Start TestFlow + Pact Broker
         run: docker compose up -d postgres pact-broker testflow
@@ -53,16 +87,13 @@ jobs:
           done
           curl -sf -u pact:pact http://localhost:9292/diagnostic/status/heartbeat
 
-      - name: Consumer tests
-        run: npm run test:consumer
-
       - name: Publish pacts
         run: npm run pact:publish
 
       - name: Provider verification
         run: npm run pact:verify
 
-      - name: can-i-deploy (gate)
+      - name: can-i-deploy (all consumers)
         run: npm run pact:can-i-deploy
 
       - name: Docker logs on failure
@@ -71,7 +102,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: contract-tests
+    needs: provider-verification
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:

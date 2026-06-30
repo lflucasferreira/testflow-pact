@@ -17,7 +17,7 @@
     "docker:test": "docker compose --profile test run --rm test-runner"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "devDependencies": {
     "@pact-foundation/pact": "^17.0.0",

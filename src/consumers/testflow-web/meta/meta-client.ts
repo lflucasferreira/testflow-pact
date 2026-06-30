@@ -1,9 +1,4 @@
-export type ApiMeta = {
-  name: string;
-  version: string;
-  documentation: string;
-  openapi: string;
-};
+import type { ApiMeta } from "../../../types/sandbox-api.js";
 
 export class MetaClient {
   constructor(private readonly baseUrl: string) {}

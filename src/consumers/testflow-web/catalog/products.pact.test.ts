@@ -1,17 +1,12 @@
-import path from "node:path";
-import { PactV3, MatchersV3 } from "@pact-foundation/pact";
 import { describe, expect, it } from "vitest";
+import { CONSUMER_TESTFLOW_WEB } from "../../../pact/constants.js";
+import { createPact } from "../../../pact/create-pact.js";
+import { JSON_CONTENT_TYPE, productsListMatcher } from "../../../pact/matchers.js";
 import { ProductsClient } from "./products-client.js";
 
-const { eachLike, string, number } = MatchersV3;
+const provider = createPact(CONSUMER_TESTFLOW_WEB);
 
-const provider = new PactV3({
-  dir: path.resolve(process.cwd(), "pacts"),
-  consumer: "testflow-web",
-  provider: "sandbox-api",
-});
-
-describe("testflow-web → sandbox-api", () => {
+describe("testflow-web → sandbox-api / catalog", () => {
   it("GET /api/products returns products", async () => {
     provider
       .given("products exist")
@@ -22,15 +17,8 @@ describe("testflow-web → sandbox-api", () => {
       })
       .willRespondWith({
         status: 200,
-        headers: { "Content-Type": "application/json" },
-        body: {
-          products: eachLike({
-            id: string("p1"),
-            name: string("Cypress License"),
-            price: number(0),
-            category: string("tool"),
-          }),
-        },
+        headers: JSON_CONTENT_TYPE,
+        body: productsListMatcher(),
       });
 
     await provider.executeTest(async (mockServer) => {

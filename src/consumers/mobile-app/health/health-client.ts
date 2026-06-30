@@ -1,7 +1,4 @@
-export type HealthResponse = {
-  status: string;
-  timestamp: string;
-};
+import type { HealthResponse } from "../../../types/sandbox-api.js";
 
 export class HealthClient {
   constructor(private readonly baseUrl: string) {}

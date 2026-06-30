@@ -39,13 +39,7 @@ export function loginResponseMatcher() {
 }
 
 export function meUserMatcher() {
-  return {
-    id: string(DEMO_USER.id),
-    email: string(DEMO_USER.email),
-    name: string(DEMO_USER.name),
-    role: string("user"),
-    active: boolean(true),
-  };
+  return loginUserMatcher();
 }
 
 export function apiErrorMatcher(message: string, statusCode: number) {

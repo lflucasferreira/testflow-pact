@@ -31,7 +31,7 @@ export type LoginResponse = {
 };
 
 export type MeResponse = {
-  user: User;
+  user: LoginResponse["user"];
 };
 
 export type ApiErrorResponse = {
